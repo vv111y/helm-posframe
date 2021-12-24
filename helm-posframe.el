@@ -132,16 +132,28 @@ When 0, no border is shown."
   "The display function which is used by `helm-display-function'.
 Argument BUFFER."
   (setq helm-posframe-buffer buffer)
-  (apply #'posframe-show
-         buffer
-         :position (point)
-         :poshandler helm-posframe-poshandler
-         :font helm-posframe-font
-         :override-parameters helm-posframe-parameters
-         :respect-header-line t
-         :border-width helm-posframe-border-width
-         :border-color (face-attribute 'helm-posframe-border :background nil t)
-         (funcall helm-posframe-size-function)))
+  ;; TODO need to deal with dead frames in frame-list + unresponsive frames
+  ;; TODO for actions menu I needed to mod posframe. document, send PR
+  ;; TODO doesn't quit work, selects frame, but need to change buffer
+  (if (and (bound-and-true-p helm-posframe-frame)
+           (frame-live-p helm-posframe-frame))
+      (progn
+        (select-frame-set-input-focus helm-posframe-frame)
+        (switch-to-buffer buffer)
+        ;; (select-frame-set-input-focus helm-posframe-frame)
+        (make-frame-visible helm-posframe-frame)
+        helm-posframe-frame)
+    (setq helm-posframe-frame
+          (apply #'posframe-show
+                 buffer
+                 :position (point)
+                 :poshandler helm-posframe-poshandler
+                 :font helm-posframe-font
+                 :override-parameters helm-posframe-parameters
+                 :respect-header-line t
+                 :border-width helm-posframe-border-width
+                 :border-color (face-attribute 'helm-posframe-border :background nil t)
+                 (funcall helm-posframe-size-function)))))
 
 (defun helm-posframe-get-size ()
   "The default functon used by `helm-posframe-size-function'."
@@ -167,7 +179,9 @@ In this advice function, `burn-buffer' will be temp redefine as
             ((symbol-function 'replace-buffer-in-windows) #'ignore))
     (funcall orig-func)
     (when (posframe-workable-p)
-      (posframe-hide helm-posframe-buffer))))
+      ;; (posframe-hide helm-posframe-buffer)
+      (posframe--make-frame-invisible helm-posframe-frame)
+      )))
 
 ;;;###autoload
 (defun helm-posframe-enable ()
