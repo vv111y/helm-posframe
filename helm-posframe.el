@@ -57,6 +57,7 @@
 
 ;;; Code:
 ;; * helm-posframe's code
+;; ** requires, customs, vars
 (require 'cl-lib)
 (require 'posframe)
 (require 'helm)
@@ -124,6 +125,8 @@ When 0, no border is shown."
 
 ;; Fix warn
 (defvar emacs-basic-display)
+
+;; ** Functions
 
 (defun helm-posframe-display (buffer &optional _resume)
   "The display function which is used by `helm-display-function'.
